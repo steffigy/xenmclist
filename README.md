@@ -1,7 +1,6 @@
-# XenMC Whitelist Script
+#XenMC Whitelist Script#
 
 *by Stephanie "catwithahat" Harms &copy; 2014*
-----
 
 ### What is this?
 XenMC Whitelist is a script which lets your XenForo's members list, act as a whitelist for Minecraft.
