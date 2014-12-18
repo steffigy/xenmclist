@@ -2,21 +2,23 @@
 /*
 	XenForo / Whitelist Script
 	--------------------------
-	This takes advantage of punching in a username into the MC console to add someone
-	to the whitelist, it then reloads the whitelist immediately
+	Uses the members list in XenForo to sync up the whitelist on a Minecraft Server
 
-	(c) stephanie harms, 2014
+	(c) 2014, stephanie harms <stephanie.olivia.harms@gmail.com>
 */
 
-// database connection details
-$hostname = 'hostname';	// a.k.a. server name - this is usually 'localhost'
+//
+// SCRIPT SETTINGS
+//
+$hostname = 'hostname';
 $username = 'username';
 $password = 'password';
 $database = 'database';
 
-// screen session name
 $screenid = 'minecraft';
 $listfile = './whitelist.json';
+
+// -------------------------------
 
 // mysql connection
 $connection = new mysqli($hostname, $username, $password, $database);
@@ -31,21 +33,26 @@ $xen = $connection->query($sql);
 // get the whitelist from minecraft
 $json = file_get_contents($listfile);
 $data = json_decode($json, true);
-
 $list = array();
 
-foreach($data as $mcp) {
-	array_push($list, $mcp['name']);
+// build a list of currently whitelisted names form whitelist.json
+foreach($data as $players) {
+	array_push($list, $players['name']);
 }
 
 // loop through the xenforo users
 while($row = $xen->fetch_assoc()) {
 
 	$name = $row['username'];
+
+	// if the member's name isn't in the whitelist...
 	if(!in_array($name, $list)) {
+
+		// add member + reload whitelist
 		$cmd = `screen -S {$screenid} -X eval 'stuff "whitelist add {$name}"'\015`;
 		$cmd = `screen -S {$screenid} -X eval 'stuff "whitelist reload"'\015`;
 
+		// log this!
 		$log = "[ADD] ".$name." - ".date('F j, Y, g:i:s a') . PHP_EOL;
 		file_put_contents('./log/'.date('Y.n.j').'.log', $log, FILE_APPEND);
 	} else {
@@ -54,7 +61,7 @@ while($row = $xen->fetch_assoc()) {
 			$cmd = `screen -S {$screenid} -X eval 'stuff "whitelist remove {$name}"'\015`;
 			$cmd = `screen -S {$screenid} -X eval 'stuff "whitelist reload"'\015`;
 
-			$log = "----- " .PHP_EOL
+			$log = "----- " . PHP_EOL
 				 . "[BAN] ".$name." - ".date('F j, Y, g:i:s a') . PHP_EOL
 				 . "----- " . PHP_EOL;
 			file_put_contents('./log/'.date('Y.n.j').'.log', $log, FILE_APPEND);
